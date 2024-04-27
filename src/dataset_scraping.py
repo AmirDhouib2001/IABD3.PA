@@ -8,6 +8,7 @@ from selenium.webdriver.common.keys import Keys
 
 
 
+
 # chercher les rose , marguerittes ,tulipes
 
 driver = webdriver.Firefox()
