@@ -8,7 +8,7 @@ from selenium.webdriver.common.keys import Keys
 
 driver = webdriver.Chrome()
 field_type = "ward"
-query = "rose"
+query = "margherite"
 path = f'./img/{field_type}'
 
 urls = {
