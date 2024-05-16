@@ -1,79 +1,92 @@
-//
-// Created by Damien Nadjar on 16/05/2024.
-//
-#include <iostream>
 #include <vector>
-#include <cmath>
+#include <random>
+#include <iostream>
+#include <algorithm>
 
-// Données TEST
-std::vector<double> X = {1.0, 2.0, 3.0, 4.0, 5.0}; // Features
-std::vector<double> y = {2.0, 4.0, 6.0, 8.0, 10.0}; // Target
+#ifdef WIN32
+#define DLLEXPORT __declspec(dllexport)
+#else
+#define DLLEXPORT
+#endif
 
-//Fonction de prédiction
-double predict(double b0, double b1, double x) {
-    return b0 + b1 * x;
-}
+extern "C" {
+class modele_lineaire {
+private:
+    std::vector<double> W;
+    double b;
+    double alpha;
 
-//Fonction de coût
-double computeCost(const std::vector<double>& X, const std::vector<double>& y, double b0, double b1) {
-    double totalCost = 0.0;
-    int m = X.size();
+public:
+    modele_lineaire(int64_t input_size) : W(input_size), b(0.0), alpha(0.01) {
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_real_distribution<> dis(-1.0, 1.0);
 
-    for(int i = 0; i < m; ++i) {
-        double prediction = predict(b0, b1, X[i]);
-        double error = prediction - y[i];
-        totalCost += error * error;
+        // Initialize weights
+        for (auto& weight : W) {
+            weight = dis(gen);
+        }
+        b = dis(gen);  // Initialize bias
     }
 
-    return totalCost / (2 * m);
-}
-
-//Descente de gradient
-void gradientDescent(std::vector<double>& X, std::vector<double>& y, double& b0, double& b1, double learningRate, int iterations) {
-    int m = X.size();
-
-    for(int iter = 0; iter < iterations; ++iter) {
-        double b0_gradient = 0.0;
-        double b1_gradient = 0.0;
-
-        for(int i = 0; i < m; ++i) {
-            double prediction = predict(b0, b1, X[i]);
-            double error = prediction - y[i];
-            b0_gradient += error;
-            b1_gradient += error * X[i];
+    std::vector<double> predict(const std::vector<double> &inputs) {
+        double total = b;
+        for (size_t i = 0; i < inputs.size(); ++i) {
+            total += W[i] * inputs[i];
         }
+        return { total };
+    }
 
-        b0 -= (learningRate / m) * b0_gradient;
-        b1 -= (learningRate / m) * b1_gradient;
+    void train(const std::vector<std::vector<double>> &all_samples_inputs,
+               const std::vector<double> &all_samples_outputs,
+               double alpha, int64_t nb_iter) {
+        this->alpha = alpha;
+        int64_t num_samples = all_samples_inputs.size();
 
-        // Afficher le coût toutes les 100 itérations
-        if (iter % 100 == 0) {
-            std::cout << "Iteration " << iter << ", Cost: " << computeCost(X, y, b0, b1) << std::endl;
+        for (int64_t it = 0; it < nb_iter; ++it) {
+            int64_t k = std::rand() % num_samples;
+            const std::vector<double> &sample_inputs = all_samples_inputs[k];
+            double expected_output = all_samples_outputs[k];
+
+            // Predict
+            double prediction = predict(sample_inputs)[0];
+
+            // Compute error
+            double error = prediction - expected_output;
+
+            // Update
+            for (size_t i = 0; i < W.size(); ++i) {
+                W[i] -= alpha * error * sample_inputs[i];
+            }
+            b -= alpha * error;
         }
     }
+};
+
+DLLEXPORT modele_lineaire *create_linear_model(int64_t input_size) {
+    return new modele_lineaire(input_size);
 }
 
-//TEST
+DLLEXPORT void destroy_linear_model(modele_lineaire *model) {
+    delete model;
+}
 
-int main() {
-    // Hyperparamètres
-    double learningRate = 0.01;
-    int iterations = 1000;
+DLLEXPORT void predict(modele_lineaire *model, double *inputs, int64_t num_inputs, double *output) {
+    std::vector<double> input_vector(inputs, inputs + num_inputs);
+    std::vector<double> results = model->predict(input_vector);
+    std::copy(results.begin(), results.end(), output);
+}
 
-    // Paramètres du modèle
-    double b0 = 0.0; // Ordonnée à l'origine
-    double b1 = 0.0; // Pente
+DLLEXPORT void train(modele_lineaire *model, const double *inputs, int64_t num_samples, int64_t input_size, const double *outputs,
+                     double alpha, int64_t iterations) {
+    std::vector<std::vector<double>> training_inputs(num_samples, std::vector<double>(input_size));
+    std::vector<double> training_outputs(num_samples);
 
-    // Entraîner le modèle
-    gradientDescent(X, y, b0, b1, learningRate, iterations);
+    for (int64_t i = 0; i < num_samples; ++i) {
+        std::copy(inputs + i * input_size, inputs + (i + 1) * input_size, training_inputs[i].begin());
+        training_outputs[i] = outputs[i];
+    }
 
-    // Afficher les paramètres finaux
-    std::cout << "Final parameters: b0 = " << b0 << ", b1 = " << b1 << std::endl;
-
-    // Faire des prédictions
-    double x_new = 6.0;
-    double y_pred = predict(b0, b1, x_new);
-    std::cout << "Prediction for x = " << x_new << " : y = " << y_pred << std::endl;
-
-    return 0;
+    model->train(training_inputs, training_outputs, alpha, iterations);
+}
 }
