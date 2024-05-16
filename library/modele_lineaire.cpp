@@ -87,6 +87,7 @@ DLLEXPORT void predict(modele_lineaire *model, double *inputs, int64_t num_input
         std::copy(outputs + i * output_size, outputs + (i + 1) * output_size, training_outputs[i].begin());
     }
 
+
     for (int64_t it = 0; it < iterations; ++it) {
         for (int64_t idx = 0; idx < num_samples; ++idx) {
             mlp->propagate(training_inputs[idx], is_classification);
