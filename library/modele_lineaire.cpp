@@ -71,35 +71,21 @@ DLLEXPORT void destroy_linear_model(modele_lineaire *model) {
     delete model;
 }
 
-DLLEXPORT void predict(modele_lineaire *model, double *inputs, int64_t num_inputs, double *output) {
+DLLEXPORT void predict(modele_lineaire *model, const double *inputs, int64_t num_inputs, double *output) {
     std::vector<double> input_vector(inputs, inputs + num_inputs);
     std::vector<double> results = model->predict(input_vector);
     std::copy(results.begin(), results.end(), output);
 }
 
-    DLLEXPORT void train(MyMLP *mlp, const double *inputs, int64_t num_samples, int64_t input_size, const double *outputs,
-                         int64_t output_size, double alpha, int64_t iterations, bool is_classification) {
-    std::vector<std::vector<double> > training_inputs(num_samples, std::vector<double>(input_size));
-    std::vector<std::vector<double> > training_outputs(num_samples, std::vector<double>(output_size));
+DLLEXPORT void train(modele_lineaire *model, const double *inputs, int64_t num_samples, int64_t input_size, const double *outputs,
+                     double alpha, int64_t iterations) {
+    std::vector<std::vector<double>> training_inputs(num_samples, std::vector<double>(input_size));
+    std::vector<double> training_outputs(outputs, outputs + num_samples);
 
     for (int64_t i = 0; i < num_samples; i++) {
         std::copy(inputs + i * input_size, inputs + (i + 1) * input_size, training_inputs[i].begin());
-        std::copy(outputs + i * output_size, outputs + (i + 1) * output_size, training_outputs[i].begin());
     }
 
-
-    for (int64_t it = 0; it < iterations; ++it) {
-        for (int64_t idx = 0; idx < num_samples; ++idx) {
-            mlp->propagate(training_inputs[idx], is_classification);
-
-
-            for (size_t j = 1; j <= mlp->get_d()[mlp->get_L()]; ++j) {
-                double error = training_outputs[idx][j - 1] - mlp->get_X()[mlp->get_L()][j];
-                for (size_t i = 0; i <= mlp->get_d()[mlp->get_L() - 1]; ++i) {
-                    mlp->get_W()[mlp->get_L()][i][j] += alpha * error * mlp->get_X()[mlp->get_L() - 1][i];
-                }
-            }
-        }
-    }
+    model->train(training_inputs, training_outputs, alpha, iterations);
 }
 }
