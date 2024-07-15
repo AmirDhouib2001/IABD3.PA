@@ -10,7 +10,9 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 
 chrome_options = Options()
-chrome_options.add_argument("--headless")  # Si vous voulez exécuter Chrome en mode headless
+chrome_options.add_argument(
+    "--headless"
+)  # Si vous voulez exécuter Chrome en mode headless
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 
@@ -18,9 +20,21 @@ service = Service(ChromeDriverManager().install())
 driver = webdriver.Chrome(service=service, options=chrome_options)
 
 fleurs = [
-    {"type": "marguerite_fleur", "query": "marguerite", "path": "C:/projet_annuel/src/img/marguerite_fleur"},
-    {"type": "rose_rouge", "query": "rose rouge", "path": "C:/projet_annuel/src/img/rose_rouge"},
-    {"type": "tulipe_jaune", "query": "tulipe jaune", "path": "C:/projet_annuel/src/img/tulipe_jaune"},
+    {
+        "type": "marguerite_fleur",
+        "query": "marguerite",
+        "path": "C:/projet_annuel/src/img/marguerite_fleur",
+    },
+    {
+        "type": "rose_rouge",
+        "query": "rose rouge",
+        "path": "C:/projet_annuel/src/img/rose_rouge",
+    },
+    {
+        "type": "tulipe_jaune",
+        "query": "tulipe jaune",
+        "path": "C:/projet_annuel/src/img/tulipe_jaune",
+    },
 ]
 
 urls = {
@@ -31,6 +45,7 @@ urls = {
     "adobe": "https://stock.adobe.com/fr",
     "pexels": "https://www.pexels.com/fr-fr/",
 }
+
 
 def get_input_xpath(key):
     if key == "google":
@@ -72,7 +87,7 @@ def download_images(site, query, path):
     existing_urls = set()
 
     for file in existing_files:
-        with open(os.path.join(path, file), 'rb') as img_file:
+        with open(os.path.join(path, file), "rb") as img_file:
             existing_urls.add(img_file.read())
 
     nb_files = len(existing_files)
@@ -105,7 +120,7 @@ def download_images(site, query, path):
             if img_content in existing_urls:
                 print(f"Image {img_name} déjà téléchargée")
                 continue
-            with open(img_path, 'wb') as img_file:
+            with open(img_path, "wb") as img_file:
                 img_file.write(img_content)
             print(f"Image {img_name} téléchargée")
             existing_urls.add(img_content)
@@ -115,9 +130,9 @@ def download_images(site, query, path):
 
     logging.info(f"{query} images downloaded to {path}")
 
+
 for fleur in fleurs:
     print(f"Téléchargement des images pour {fleur['query']} dans {fleur['path']}")
     download_images("bing", fleur["query"], fleur["path"])
 
 driver.quit()
-
