@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FloraScan - Classification des Fleurs</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Lucida Sans', Arial, sans-serif;
+            background-image: url('../static/fond.jpg');
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: inherit;
+            filter: blur(10px);
+            z-index: -1;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 40px;
+        }
+
+        .logo img {
+            height: 100px;
+        }
+
+        .title {
+            text-align: center;
+            flex-grow: 1;
+        }
+
+        .title h1 {
+            font-size: 36px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .name {
+            margin-right: 20px;
+            text-align: center;
+        }
+
+        .name h2 {
+            font-size: 18px;
+            font-weight: normal;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            flex-grow: 1;
+        }
+
+        .upload form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .model-selection {
+            margin-bottom: 10px;
+        }
+
+        .model-selection label {
+            font-size: 18px;
+            margin-right: 10px;
+        }
+
+        .model-selection select {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 18px;
+            margin-top: 10px;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+
+        .model-selection select:hover {
+            background-color: #45a049;
+        }
+
+        .custom-file-upload-box {
+            width: 300px;
+            height: 200px;
+            border: 2px dashed #4CAF50;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: white;
+            cursor: pointer;
+            position: relative;
+        }
+
+        #file-upload {
+            display: none;
+        }
+
+        #box-text {
+            font-size: 18px;
+        }
+
+        #preview-image {
+            max-width: 100%;
+            max-height: 100%;
+            position: absolute;
+        }
+
+        .upload button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 18px;
+            margin-top: 10px;
+        }
+
+        .upload button:hover {
+            background-color: #45a049;
+        }
+
+        .result {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 18px;
+            margin-top: 20px;
+            text-align: center;
+            display: none;
+        }
+
+        #prediction {
+            font-size: 20px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        #result-container {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        #uploaded-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            cursor: pointer;
+        }
+
+        #modify-button, #retry-button {
+            display: none;
+            background-color: #f44336;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 18px;
+            margin-top: 10px;
+        }
+
+        #retry-button {
+            background-color: #4CAF50;
+        }
+
+        #modify-button:hover {
+            background-color: #d32f2f;
+        }
+
+        #retry-button:hover {
+            background-color: #45a049;
+        }
+
+        footer {
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            text-align: center;
+            padding: 10px 0;
+            font-size: 14px;
+            margin-top: auto;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <img src="../static/logo.png" alt="Logo de l'école">
+        </div>
+        <div class="title">
+            <h1>FloraScan</h1>
+        </div>
+        <div class="name">
+            <h2>DHOUIB & REKIK</h2>
+        </div>
+    </header>
+    <main>
+        <div class="container">
+            <div class="upload">
+                <form id="uploadForm" action="/upload" method="POST" enctype="multipart/form-data">
+                    <div class="model-selection">
+                        <label for="model-select">Choisissez un modèle :</label>
+                        <select id="model-select" name="model">
+                            <option value="MLP">MLP</option>
+
+                        </select>
+                    </div>
+                    <div class="custom-file-upload-box" id="file-upload-box">
+                        <input type="file" id="file-upload" name="image" accept="image/*">
+                        <span id="box-text">Sélectionner une image</span>
+                        <img id="preview-image" src="" alt="Preview" style="display: none;">
+                    </div>
+                    <button type="submit">Commencer</button>
+                </form>
+            </div>
+            <div id="result-container">
+                <div id="prediction" class="result"></div>
+                <button id="retry-button">Recommencer</button>
+            </div>
+        </div>
+    </main>
+    <footer>
+        Cette application est une démo et peut rencontrer des problèmes. Veuillez nous contacter par mail à adhouib2@myges.fr ou zrekik1@myges.fr.
+    </footer>
+    <script>
+        document.getElementById('file-upload-box').onclick = function () {
+            document.getElementById('file-upload').click();
+        }
+
+        document.getElementById('file-upload').onchange = function () {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    document.getElementById('preview-image').src = e.target.result;
+                    document.getElementById('preview-image').style.display = 'block';
+                    document.getElementById('box-text').style.display = 'none';
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        document.getElementById('uploadForm').onsubmit = async function (event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+            const file = document.getElementById('file-upload').files[0];
+            if (!file) {
+                alert('Veuillez sélectionner une image.');
+                return;
+            }
+
+            const response = await fetch('/upload', {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+            const predictionDiv = document.getElementById('prediction');
+            predictionDiv.innerText = `Résultat : ${result.prediction}`;
+            predictionDiv.style.display = 'block'; // Show the result div
+
+            // Show the result container
+            document.getElementById('result-container').style.display = 'flex';
+            document.getElementById('modify-button').style.display = 'none';
+            document.getElementById('retry-button').style.display = 'block';
+        }
+
+        document.getElementById('retry-button').onclick = function () {
+            document.getElementById('file-upload').value = '';
+            document.getElementById('preview-image').style.display = 'none';
+            document.getElementById('box-text').style.display = 'block';
+            document.getElementById('uploaded-image').src = '';
+            document.getElementById('prediction').style.display = 'none';
+            document.getElementById('result-container').style.display = 'none';
+            document.getElementById('modify-button').style.display = 'none';
+            document.getElementById('retry-button').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
