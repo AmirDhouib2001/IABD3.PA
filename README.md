@@ -22,8 +22,15 @@ Ce projet vise à développer des algorithmes de classification en **C++** pour 
 - **README.md**
 - **requirements.txt**: Liste les dépendances nécessaires pour le projet.
 
-## Membres du Groupe et Contacts
+## lancer l'application 
+- cd Flask_app
+- python app.py
 
+## Installer les dépendances requises:
+-pip install -r requirements.txt
+
+
+## Membres du Groupe
 - Zeineb Rekik
 - Amir Dhouib
 
