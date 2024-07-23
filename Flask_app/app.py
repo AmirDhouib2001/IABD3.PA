@@ -7,7 +7,7 @@ import io
 
 app = Flask(__name__)
 
-mlp_lib = ctypes.CDLL("../library/mlp_save.dll")
+mlp_lib = ctypes.CDLL("../library/MLP/mlp_save.dll")
 
 create_mlp = mlp_lib.create_mlp
 create_mlp.argtypes = [POINTER(c_int64), c_int64]
